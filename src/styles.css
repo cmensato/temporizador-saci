@@ -1,0 +1,132 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+@import "@fontsource/fredoka/400.css";
+@import "@fontsource/fredoka/500.css";
+@import "@fontsource/fredoka/600.css";
+@import "@fontsource/fredoka/700.css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+
+  --font-display: "Fredoka", ui-rounded, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-apple: var(--apple);
+  --color-leaf: var(--leaf);
+  --color-mouse: var(--mouse);
+  --color-sun: var(--sun);
+  --color-sky: var(--sky);
+}
+
+:root {
+  --radius: 1.25rem;
+
+  --paper: oklch(0.985 0.012 85);
+  --ink: oklch(0.32 0.02 60);
+  --apple: oklch(0.635 0.207 25);
+  --leaf: oklch(0.56 0.11 140);
+  --mouse: oklch(0.62 0.03 60);
+  --sun: oklch(0.82 0.14 75);
+  --sky: oklch(0.9 0.06 220);
+
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: oklch(1 0.005 85);
+  --card-foreground: var(--ink);
+  --popover: oklch(1 0.005 85);
+  --popover-foreground: var(--ink);
+  --primary: var(--apple);
+  --primary-foreground: oklch(0.99 0.005 85);
+  --secondary: var(--sun);
+  --secondary-foreground: var(--ink);
+  --muted: oklch(0.94 0.015 85);
+  --muted-foreground: oklch(0.45 0.02 60);
+  --accent: var(--leaf);
+  --accent-foreground: oklch(0.99 0.005 85);
+  --destructive: oklch(0.6 0.22 30);
+  --destructive-foreground: oklch(0.99 0.005 85);
+  --border: oklch(0.86 0.02 70);
+  --input: oklch(0.9 0.015 70);
+  --ring: var(--apple);
+}
+
+@utility paper-cut {
+  box-shadow:
+    4px 4px 0 0 oklch(0.32 0.02 60 / 0.12),
+    0 1px 0 0 oklch(0.32 0.02 60 / 0.08);
+  border: 2px solid oklch(0.32 0.02 60 / 0.15);
+}
+
+@utility paper-cut-lg {
+  box-shadow:
+    6px 6px 0 0 oklch(0.32 0.02 60 / 0.14),
+    0 1px 0 0 oklch(0.32 0.02 60 / 0.08);
+  border: 2px solid oklch(0.32 0.02 60 / 0.18);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html,
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+  .bg-paper-dots {
+    background-image: radial-gradient(oklch(0.32 0.02 60 / 0.05) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+}

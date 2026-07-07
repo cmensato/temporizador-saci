@@ -42,26 +42,69 @@ function formatTime(ms: number): string {
   return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 }
 
-// Função atualizada para simular o alarme de um reloginho (4 bips rápidos)
-function tocarAlarme() {
-  try {
-    type NavegadorComAudio = Window &
-      typeof globalThis & {
-        webkitAudioContext?: typeof window.AudioContext;
-      };
+// --- CONFIGURAÇÃO GLOBAL DE ÁUDIO À PROVA DE BLOQUEIOS ---
+type NavegadorComAudio = Window &
+  typeof globalThis & {
+    webkitAudioContext?: typeof window.AudioContext;
+  };
 
+let audioCtxGlobal: AudioContext | null = null;
+
+const getAudioContext = () => {
+  if (typeof window === "undefined") return null;
+
+  if (!audioCtxGlobal) {
     const AudioContextClass =
       window.AudioContext || (window as NavegadorComAudio).webkitAudioContext;
-    if (!AudioContextClass) return;
+    if (AudioContextClass) audioCtxGlobal = new AudioContextClass();
+  }
 
-    const ctx = new AudioContextClass();
+  // Destrava o áudio no momento exato da interação do usuário
+  if (audioCtxGlobal && audioCtxGlobal.state === "suspended") {
+    audioCtxGlobal.resume();
+  }
 
-    const numeroDeBips = 4; // Quantidade de bips do alarme
-    const duracaoBip = 0.12; // Tempo de duração de cada bip (em segundos)
-    const intervaloBip = 0.22; // Espaçamento entre o início de cada bip
+  return audioCtxGlobal;
+};
+
+// Som seco de Caixa de Bateria (acionado no clique do redemoinho)
+function tocarCaixa() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const osc = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+
+    osc.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    // Frequências para o estalo da caixa
+    osc.type = "square";
+    osc.frequency.setValueAtTime(250, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+
+    gainNode.gain.setValueAtTime(0.4, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.1);
+  } catch (err) {
+    console.error("Erro ao gerar o som da caixa:", err);
+  }
+}
+
+// Alarme de reloginho (4 bips rápidos)
+function tocarAlarme() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const numeroDeBips = 8;
+    const duracaoBip = 0.12;
+    const intervaloBip = 0.22;
 
     for (let i = 0; i < numeroDeBips; i++) {
-      // Calcula o momento exato em que cada som deve começar e terminar
       const startTime = ctx.currentTime + i * intervaloBip;
       const stopTime = startTime + duracaoBip;
 
@@ -71,11 +114,9 @@ function tocarAlarme() {
       osc.connect(gainNode);
       gainNode.connect(ctx.destination);
 
-      // Usamos uma frequência de 1000Hz (padrão de bips de relógios digitais como Casio)
       osc.type = "sine";
       osc.frequency.setValueAtTime(1000, startTime);
 
-      // Controla o volume e faz um corte limpo ao final de cada bip
       gainNode.gain.setValueAtTime(0.6, startTime);
       gainNode.gain.exponentialRampToValueAtTime(0.001, stopTime);
 
@@ -88,17 +129,21 @@ function tocarAlarme() {
 }
 
 function TimerPage() {
-  const navigate = useNavigate();
   const { duration, startTime, isFinished, hydrate } = useTimer();
+  const navigate = useNavigate();
 
   const [elapsed, setElapsed] = useState<number>(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
   const lastTick = useRef(Date.now());
+
+  // Trava o hydrate assim que o usuário decide sair, evitando que o timer
+  // "reviva" a partir do localStorage antes da navegação terminar.
+  const isLeavingRef = useRef(false);
 
   const totalWhirlwinds = Math.max(3, Math.min(60, Math.floor(duration / 10000)));
 
   useEffect(() => {
+    if (isLeavingRef.current) return;
     hydrate();
   }, [hydrate, startTime, duration]);
 
@@ -109,7 +154,7 @@ function TimerPage() {
   }, [isFinished]);
 
   useEffect(() => {
-    if (!startTime || isFinished || isPaused || isNavigating) return;
+    if (!startTime || isFinished || isPaused) return;
 
     lastTick.current = Date.now();
 
@@ -121,7 +166,7 @@ function TimerPage() {
         const nextElapsed = prev + delta;
         if (nextElapsed >= duration) {
           setTimeout(() => {
-            if (!isNavigating) useTimer.setState({ isFinished: true });
+            useTimer.setState({ isFinished: true });
           }, 0);
           return duration;
         }
@@ -131,20 +176,26 @@ function TimerPage() {
     }, 100);
 
     return () => clearInterval(interval);
-  }, [isPaused, startTime, duration, isFinished, isNavigating]);
+  }, [isPaused, startTime, duration, isFinished]);
 
-  const handleBack = async () => {
-    if (isNavigating) return;
-    setIsNavigating(true);
+  // Função Voltar "Tiro Certo"
+  const handleBack = () => {
+    // 1. Congela o timer imediatamente
     setIsPaused(true);
-    try {
-      await navigate({ to: "/" });
-      useTimer.setState({ startTime: null, duration: 0, isFinished: false });
-    } catch (error) {
-      console.error("Erro ao navegar:", error);
-    } finally {
-      setIsNavigating(false);
-    }
+
+    // 2. Impede que o efeito de hydrate rode de novo e "reviva" o timer
+    //    a partir do localStorage antes da navegação terminar.
+    isLeavingRef.current = true;
+
+    // 3. Limpa o estado E o localStorage (reset() chama clearPersisted()
+    //    internamente — setState puro não limpava o localStorage, e era
+    //    isso que fazia o hydrate() trazer o timer de volta).
+    useTimer.getState().reset();
+
+    // 4. Navegação client-side do router, sem recarregar a página.
+    //    Isso evita qualquer reinicialização de estado/leitura de
+    //    localStorage no meio do caminho.
+    navigate({ to: "/" });
   };
 
   const progress = duration > 0 ? Math.min(1, elapsed / duration) : 0;
@@ -162,9 +213,9 @@ function TimerPage() {
 
       <div className="flex justify-between items-center mb-8 z-50 relative bg-white/60 backdrop-blur-sm p-3 rounded-2xl shadow-sm">
         <button
+          type="button"
           onClick={handleBack}
-          disabled={isNavigating}
-          className="px-5 py-2 bg-white rounded-full font-bold shadow-sm hover:bg-gray-200 transition disabled:opacity-50 text-sm"
+          className="px-5 py-2 bg-white rounded-full font-bold shadow-sm hover:bg-gray-200 transition text-sm cursor-pointer z-[100] relative"
         >
           ← Voltar
         </button>
@@ -180,8 +231,9 @@ function TimerPage() {
 
         {!isFinished ? (
           <button
+            type="button"
             onClick={() => setIsPaused(!isPaused)}
-            className="px-5 py-2 bg-emerald-600 text-white rounded-full font-bold shadow-sm text-sm"
+            className="px-5 py-2 bg-emerald-600 text-white rounded-full font-bold shadow-sm text-sm cursor-pointer z-[100] relative"
           >
             {isPaused ? "▶ Continuar" : "⏸ Pausar"}
           </button>
@@ -192,7 +244,11 @@ function TimerPage() {
 
       <div className="grid grid-cols-7 gap-4 auto-rows-max">
         {Array.from({ length: totalWhirlwinds }).map((_, i) => (
-          <div key={i} className="flex justify-center items-center">
+          <div
+            key={i}
+            className="flex justify-center items-center cursor-pointer hover:scale-110 transition-transform"
+            onClick={tocarCaixa}
+          >
             {i === totalWhirlwinds - 1 ? (
               isFinished ? (
                 <Saci size={70} />

@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TemporizadorRouteImport } from './routes/temporizador'
 import { Route as FimRouteImport } from './routes/fim'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 
 const TemporizadorRoute = TemporizadorRouteImport.update({
@@ -23,6 +24,11 @@ const FimRoute = FimRouteImport.update({
   path: '/fim',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -31,30 +37,34 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/fim': typeof FimRoute
   '/temporizador': typeof TemporizadorRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/fim': typeof FimRoute
   '/temporizador': typeof TemporizadorRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/fim': typeof FimRoute
   '/temporizador': typeof TemporizadorRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/fim' | '/temporizador'
+  fullPaths: '/' | '/about' | '/fim' | '/temporizador'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/fim' | '/temporizador'
-  id: '__root__' | '/' | '/fim' | '/temporizador'
+  to: '/' | '/about' | '/fim' | '/temporizador'
+  id: '__root__' | '/' | '/about' | '/fim' | '/temporizador'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
   FimRoute: typeof FimRoute
   TemporizadorRoute: typeof TemporizadorRoute
 }
@@ -75,6 +85,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FimRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
   FimRoute: FimRoute,
   TemporizadorRoute: TemporizadorRoute,
 }

@@ -1,127 +1,49 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  Outlet,
-  Link,
-  createRootRouteWithContext,
-  useRouter,
-  HeadContent,
-  Scripts,
-} from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
+import appCss from '../styles.css?url'
 
-import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
+const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getItem('theme');var mode=(stored==='light'||stored==='dark'||stored==='auto')?stored:'auto';var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;var resolved=mode==='auto'?(prefersDark?'dark':'light'):mode;var root=document.documentElement;root.classList.remove('light','dark');root.classList.add(resolved);if(mode==='auto'){root.removeAttribute('data-theme')}else{root.setAttribute('data-theme',mode)}root.style.colorScheme=resolved;}catch(e){}})();`
 
-function NotFoundComponent() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">🌀</h1>
-        <h2 className="mt-4 text-xl font-semibold">Página não encontrada</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          O Saci levou essa página no redemoinho.
-        </p>
-        <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
-          >
-            Voltar ao início
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
-  const router = useRouter();
-  useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
-
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold">Algo deu errado</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Tente novamente ou volte ao início.
-        </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <button
-            onClick={() => {
-              router.invalidate();
-              reset();
-            }}
-            className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
-          >
-            Tentar novamente
-          </button>
-          <a
-            href="/"
-            className="inline-flex items-center justify-center rounded-full border-2 border-input bg-background px-6 py-3 text-sm font-semibold hover:bg-accent hover:text-accent-foreground"
-          >
-            Início
-          </a>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+export const Route = createRootRoute({
   head: () => ({
     meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { name: "theme-color", content: "#fdfbf7" },
-      { title: "Saci e os Redemoinhos — Temporizador visual de transição" },
       {
-        name: "description",
-        content:
-          "Ferramenta visual de transição: escolha 2, 5 ou 10 minutos e acompanhe o Saci enquanto os redemoinhos desaparecem.",
+        charSet: 'utf-8',
       },
-      { property: "og:title", content: "Saci e os Redemoinhos" },
       {
-        property: "og:description",
-        content:
-          "Temporizador visual, sem números, para apoiar transições de atividade com previsibilidade.",
+        name: 'viewport',
+        content: 'width=device-width, initial-scale=1',
       },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
+      {
+        title: 'Temporizador Saci', // Título da aba do navegador alterado aqui!
+      },
     ],
     links: [
-      { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      {
+        rel: 'stylesheet',
+        href: appCss,
+      },
     ],
   }),
-  shellComponent: RootShell,
-  component: RootComponent,
-  notFoundComponent: NotFoundComponent,
-  errorComponent: ErrorComponent,
-});
+  shellComponent: RootDocument,
+})
 
-function RootShell({ children }: { children: ReactNode }) {
+function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <HeadContent />
       </head>
-      <body>
-        {children}
+      <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[rgba(79,184,178,0.24)]">
+        
+        {/* O <Header /> foi apagado daqui */}
+        
+        {children} {/* Aqui é onde o jogo (rota index) é renderizado */}
+        
+        {/* O <Footer /> e o <TanStackDevtools /> foram apagados */}
+        
         <Scripts />
       </body>
     </html>
-  );
-}
-
-function RootComponent() {
-  const { queryClient } = Route.useRouteContext();
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <Outlet />
-    </QueryClientProvider>
-  );
+  )
 }

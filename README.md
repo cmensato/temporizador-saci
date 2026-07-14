@@ -4,7 +4,7 @@ Um aplicativo interativo de temporizador com uma temática lúdica do folclore b
 
 ## 🚀 Tecnologias Utilizadas
 
-Este projeto foi construído utilizando um ecossistema moderno de desenvolvimento front-end para garantir alta performance e manutenibilidade:
+Este projeto foi construído utilizando um ecossistema moderno de desenvolvimento front-end para garantir alta performance:
 
 *   **[React](https://react.dev/)**: Biblioteca principal para construção da interface.
 *   **[TanStack Start](https://tanstack.com/start/latest)**: Framework full-stack com roteamento baseado em arquivos (file-based routing) e segurança de tipos.

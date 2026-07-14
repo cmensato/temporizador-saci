@@ -13,6 +13,9 @@ Este projeto foi construído utilizando um ecossistema moderno de desenvolviment
 *   **[Tailwind CSS](https://tailwindcss.com/)**: Estilização baseada em classes utilitárias para um design rápido e responsivo.
 *   **[Radix UI / Shadcn UI](https://ui.shadcn.com/)**: Componentes acessíveis e customizáveis.
 
+*   <img width="857" height="706" alt="Captura de tela 2026-07-14 110145" src="https://github.com/user-attachments/assets/647a4286-443d-498f-b12c-22005e17d8b6" />
+
+
 ## ⚙️ Como executar o projeto localmente
 
 Siga os passos abaixo para rodar o projeto na sua máquina:
